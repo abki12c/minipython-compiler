@@ -11,7 +11,7 @@ The minipython package is already included in this repository
 
 To run some tests included in the example.py use the following commands:
 ```
-javac *.java
+javac ParserTest.java
 java ParserTest example.py
 ```
 Before you run the example tests, remove the comments for each test case you want to test
