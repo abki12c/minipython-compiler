@@ -22,7 +22,7 @@ public class Visitor2  extends DepthFirstAdapter {
         int line = ((TId)node.getId()).getLine();
         int position = ((TId)node.getId()).getPos();
 
-        if(Visitor.getSymtable().containsKey(fName)){
+        if(Visitor.symtable.containsKey(fName)){
             LinkedList node_arguments = node.getArglist();
             AFunction function = (AFunction)symtable.get(fName);
             LinkedList function_arguments = function.getArgument();

@@ -4,17 +4,13 @@ import java.util.*;
 
 public class Visitor extends DepthFirstAdapter
 {
-    private static Hashtable symtable;
+    public static Hashtable symtable;
     public static int errors;
 
     Visitor(Hashtable symtable)
     {
         this.symtable = symtable;
         errors = 0;
-    }
-
-    public static Hashtable getSymtable() {
-        return symtable;
     }
 
     /** Check if function is already defined */
