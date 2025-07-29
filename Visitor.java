@@ -76,7 +76,9 @@ public class Visitor extends DepthFirstAdapter
                 other_function_max_args = comma_assigns.size() + 1;
             }
 
-            if(node_max_args - node_default_args == other_function_max_args || other_function_max_args - other_function_default_args == node_max_args ){
+            int node_min_args = node_max_args - node_default_args;
+            int other_min_args = other_function_max_args - other_function_default_args;
+            if(node_min_args == other_function_max_args || other_min_args == node_max_args){
                 // minimum arguments of one function == maximum arguments of another function
                 int line = ((TId)node.getId()).getLine();
                 int position = ((TId)node.getId()).getPos();
@@ -94,7 +96,17 @@ public class Visitor extends DepthFirstAdapter
                 symtable.put(argName,argument);
             }
 
+            PStatement statement = node.getStatement();
+            if (statement instanceof AReturnStatement) {
+                AReturnStatement ret = (AReturnStatement) statement;
+                ret.apply(this); // process return expression
 
+                PValue value = (PValue) getOut(ret.getExpression());
+                setOut(node, value);
+            } else {
+                ANoneValueValue none = new ANoneValueValue();
+                setOut(node, none);
+            }
         }
     }
 
@@ -173,12 +185,32 @@ public class Visitor extends DepthFirstAdapter
         }
     }
 
+    @Override
+    public void outAFunctionCall(AFunctionCall node) {
+        String fname = node.getId().toString().trim();
+
+        if(symtable.containsKey(fname)) {
+            AFunction function = (AFunction) symtable.get(fname);
+            PValue returnValue = (PValue) getOut(function);
+            setOut(node, returnValue);
+        }
+    }
+
+    @Override
+    public void outAFunctionCallExpression(AFunctionCallExpression node) {
+        PValue returnValue = (PValue) getOut(node.getFunctionCall());
+        setOut(node, returnValue);
+    }
+
+
+
     /** Check if there's an error in additions */
     @Override
-    public void inAPlusExpression(APlusExpression node) {
+    public void outAPlusExpression(APlusExpression node) {
         int line,position;
-        PValue value1 = null;
-        PValue value2 = null;
+        Node value1 = null;
+        Node value2 = null;
+        AFunctionCallExpression functionCall = null;
 
         if(node.getLpar() instanceof AIdentifierExpression){
             if (symtable.get(node.getLpar().toString().trim()) instanceof AAssignStatement){
@@ -186,7 +218,10 @@ public class Visitor extends DepthFirstAdapter
                 AAssignStatement nodeEq = (AAssignStatement) symtable.get(node.getLpar().toString().trim());
                 value1 = (PValue) getOut(nodeEq);
             }
-        }else{
+        } else if(node.getLpar() instanceof AFunctionCallExpression){
+            functionCall = (AFunctionCallExpression) node.getLpar();
+            value1 = (PValue) getOut(functionCall.getFunctionCall());
+        } else {
             value1 = ((AValueExpression) node.getLpar()).getValue();
         }
 
@@ -196,7 +231,10 @@ public class Visitor extends DepthFirstAdapter
                 AAssignStatement nodeEq = (AAssignStatement) symtable.get(node.getRpar().toString().trim());
                 value2 = (PValue) getOut(nodeEq);
             }
-        }else{
+        } else if(node.getRpar() instanceof AFunctionCallExpression){
+            functionCall = (AFunctionCallExpression) node.getLpar();
+            value2 = ((AFunctionCallExpression) node.getLpar()).getFunctionCall();
+        } else {
             value2 = ((AValueExpression) node.getRpar()).getValue();
         }
 
@@ -211,9 +249,9 @@ public class Visitor extends DepthFirstAdapter
             position = ((ANoneValueValue) value2).getNone().getPos();
             System.out.println("[line : " + line + ", position : " + position + "] :" + " Cannot perform addition operation with None");
             errors++;
-        } else if (value1 instanceof AStringValueValue  && value2 instanceof ANumberValueValue) {
+        } else if (value1 instanceof AStringValueValue && value2 instanceof ANumberValueValue) {
             line = ((AStringValueValue) value1).getString().getLine();
-            System.out.println("[line : "+ line + "] :" + " Cannot perform addition operation with Number and String");
+            System.out.println("[line : "+ line + "] :" + " Cannot perform addition operation with String and Number");
             errors++;
         } else if (value1 instanceof  ANumberValueValue && value2 instanceof AStringValueValue) {
             line = ((AStringValueValue) value2).getString().getLine();
@@ -226,10 +264,11 @@ public class Visitor extends DepthFirstAdapter
 
     /** Check if there's an error in subtractions */
     @Override
-    public void inAMinusExpression(AMinusExpression node) {
+    public void outAMinusExpression(AMinusExpression node) {
         int line,position;
-        PValue value1 = null;
-        PValue value2 = null;
+        Node value1 = null;
+        Node value2 = null;
+        AFunctionCallExpression functionCall = null;
 
         if(node.getLpar() instanceof AIdentifierExpression){
             if (symtable.get(node.getLpar().toString().trim()) instanceof AAssignStatement){
@@ -237,7 +276,10 @@ public class Visitor extends DepthFirstAdapter
                 AAssignStatement nodeEq = (AAssignStatement) symtable.get(node.getLpar().toString().trim());
                 value1 = (PValue) getOut(nodeEq);
             }
-        }else{
+        } else if(node.getLpar() instanceof AFunctionCallExpression){
+            functionCall = (AFunctionCallExpression) node.getLpar();
+            value1 = (PValue) getOut(functionCall.getFunctionCall());
+        } else {
             value1 = ((AValueExpression) node.getLpar()).getValue();
         }
 
@@ -247,7 +289,10 @@ public class Visitor extends DepthFirstAdapter
                 AAssignStatement nodeEq = (AAssignStatement) symtable.get(node.getRpar().toString().trim());
                 value2 = (PValue) getOut(nodeEq);
             }
-        }else{
+        } else if(node.getRpar() instanceof AFunctionCallExpression){
+            functionCall = (AFunctionCallExpression) node.getLpar();
+            value2 = ((AFunctionCallExpression) node.getLpar()).getFunctionCall();
+        } else {
             value2 = ((AValueExpression) node.getRpar()).getValue();
         }
 
@@ -255,30 +300,31 @@ public class Visitor extends DepthFirstAdapter
         if(value1 instanceof ANoneValueValue) {
             line = ((ANoneValueValue) value1).getNone().getLine();
             position = ((ANoneValueValue) value1).getNone().getPos();
-            System.out.println("[line : " + line + ", position : " + position + "] :" + " Cannot perform addition operation with None");
+            System.out.println("[line : " + line + ", position : " + position + "] :" + " Cannot perform substraction operation with None");
             errors++;
         } else if( value2 instanceof ANoneValueValue) {
             line = ((ANoneValueValue) value2).getNone().getLine();
             position = ((ANoneValueValue) value2).getNone().getPos();
-            System.out.println("[line : " + line + ", position : " + position + "] :" + " Cannot perform addition operation with None");
+            System.out.println("[line : " + line + ", position : " + position + "] :" + " Cannot perform substraction operation with None");
             errors++;
-        } else if (value1 instanceof AStringValueValue  && value2 instanceof ANumberValueValue) {
+        } else if (value1 instanceof AStringValueValue && value2 instanceof ANumberValueValue) {
             line = ((AStringValueValue) value1).getString().getLine();
-            System.out.println("[line : "+ line + "] :" + " Cannot perform addition operation with Number and String");
+            System.out.println("[line : "+ line + "] :" + " Cannot perform substraction operation with String and Number");
             errors++;
         } else if (value1 instanceof  ANumberValueValue && value2 instanceof AStringValueValue) {
             line = ((AStringValueValue) value2).getString().getLine();
-            System.out.println("[line : "+ line + "] :" + " Cannot perform addition operation with Number and String");
+            System.out.println("[line : "+ line + "] :" + " Cannot perform substraction operation with Number and String");
             errors++;
         }
     }
 
     /** Check if there's an error in multiplications */
     @Override
-    public void inAMultExpression(AMultExpression node) {
+    public void outAMultExpression(AMultExpression node) {
         int line,position;
-        PValue value1 = null;
-        PValue value2 = null;
+        Node value1 = null;
+        Node value2 = null;
+        AFunctionCallExpression functionCall = null;
 
         if(node.getLpar() instanceof AIdentifierExpression){
             if (symtable.get(node.getLpar().toString().trim()) instanceof AAssignStatement){
@@ -286,7 +332,10 @@ public class Visitor extends DepthFirstAdapter
                 AAssignStatement nodeEq = (AAssignStatement) symtable.get(node.getLpar().toString().trim());
                 value1 = (PValue) getOut(nodeEq);
             }
-        }else{
+        } else if(node.getLpar() instanceof AFunctionCallExpression){
+            functionCall = (AFunctionCallExpression) node.getLpar();
+            value1 = (PValue) getOut(functionCall.getFunctionCall());
+        } else {
             value1 = ((AValueExpression) node.getLpar()).getValue();
         }
 
@@ -296,7 +345,10 @@ public class Visitor extends DepthFirstAdapter
                 AAssignStatement nodeEq = (AAssignStatement) symtable.get(node.getRpar().toString().trim());
                 value2 = (PValue) getOut(nodeEq);
             }
-        }else{
+        } else if(node.getRpar() instanceof AFunctionCallExpression){
+            functionCall = (AFunctionCallExpression) node.getLpar();
+            value2 = ((AFunctionCallExpression) node.getLpar()).getFunctionCall();
+        } else {
             value2 = ((AValueExpression) node.getRpar()).getValue();
         }
 
@@ -304,30 +356,31 @@ public class Visitor extends DepthFirstAdapter
         if(value1 instanceof ANoneValueValue) {
             line = ((ANoneValueValue) value1).getNone().getLine();
             position = ((ANoneValueValue) value1).getNone().getPos();
-            System.out.println("[line : " + line + ", position : " + position + "] :" + " Cannot perform addition operation with None");
+            System.out.println("[line : " + line + ", position : " + position + "] :" + " Cannot perform multiplication operation with None");
             errors++;
         } else if( value2 instanceof ANoneValueValue) {
             line = ((ANoneValueValue) value2).getNone().getLine();
             position = ((ANoneValueValue) value2).getNone().getPos();
-            System.out.println("[line : " + line + ", position : " + position + "] :" + " Cannot perform addition operation with None");
+            System.out.println("[line : " + line + ", position : " + position + "] :" + " Cannot perform multiplication operation with None");
             errors++;
-        } else if (value1 instanceof AStringValueValue  && value2 instanceof ANumberValueValue) {
+        } else if (value1 instanceof AStringValueValue && value2 instanceof ANumberValueValue) {
             line = ((AStringValueValue) value1).getString().getLine();
-            System.out.println("[line : "+ line + "] :" + " Cannot perform addition operation with Number and String");
+            System.out.println("[line : "+ line + "] :" + " Cannot perform multiplication operation with String and Number");
             errors++;
         } else if (value1 instanceof  ANumberValueValue && value2 instanceof AStringValueValue) {
             line = ((AStringValueValue) value2).getString().getLine();
-            System.out.println("[line : "+ line + "] :" + " Cannot perform addition operation with Number and String");
+            System.out.println("[line : "+ line + "] :" + " Cannot perform multiplication operation with Number and String");
             errors++;
         }
     }
 
     /** Check if there's an error in power expressions */
     @Override
-    public void inAPowerExpression(APowerExpression node) {
+    public void outAPowerExpression(APowerExpression node) {
         int line,position;
-        PValue value1 = null;
-        PValue value2 = null;
+        Node value1 = null;
+        Node value2 = null;
+        AFunctionCallExpression functionCall = null;
 
         if(node.getLpar() instanceof AIdentifierExpression){
             if (symtable.get(node.getLpar().toString().trim()) instanceof AAssignStatement){
@@ -335,7 +388,10 @@ public class Visitor extends DepthFirstAdapter
                 AAssignStatement nodeEq = (AAssignStatement) symtable.get(node.getLpar().toString().trim());
                 value1 = (PValue) getOut(nodeEq);
             }
-        }else{
+        } else if(node.getLpar() instanceof AFunctionCallExpression){
+            functionCall = (AFunctionCallExpression) node.getLpar();
+            value1 = (PValue) getOut(functionCall.getFunctionCall());
+        } else {
             value1 = ((AValueExpression) node.getLpar()).getValue();
         }
 
@@ -345,7 +401,10 @@ public class Visitor extends DepthFirstAdapter
                 AAssignStatement nodeEq = (AAssignStatement) symtable.get(node.getRpar().toString().trim());
                 value2 = (PValue) getOut(nodeEq);
             }
-        }else{
+        } else if(node.getRpar() instanceof AFunctionCallExpression){
+            functionCall = (AFunctionCallExpression) node.getLpar();
+            value2 = ((AFunctionCallExpression) node.getLpar()).getFunctionCall();
+        } else {
             value2 = ((AValueExpression) node.getRpar()).getValue();
         }
 
@@ -353,30 +412,31 @@ public class Visitor extends DepthFirstAdapter
         if(value1 instanceof ANoneValueValue) {
             line = ((ANoneValueValue) value1).getNone().getLine();
             position = ((ANoneValueValue) value1).getNone().getPos();
-            System.out.println("[line : " + line + ", position : " + position + "] :" + " Cannot perform addition operation with None");
+            System.out.println("[line : " + line + ", position : " + position + "] :" + " Cannot perform power operation with None");
             errors++;
         } else if( value2 instanceof ANoneValueValue) {
             line = ((ANoneValueValue) value2).getNone().getLine();
             position = ((ANoneValueValue) value2).getNone().getPos();
-            System.out.println("[line : " + line + ", position : " + position + "] :" + " Cannot perform addition operation with None");
+            System.out.println("[line : " + line + ", position : " + position + "] :" + " Cannot perform power operation with None");
             errors++;
-        } else if (value1 instanceof AStringValueValue  && value2 instanceof ANumberValueValue) {
+        } else if (value1 instanceof AStringValueValue && value2 instanceof ANumberValueValue) {
             line = ((AStringValueValue) value1).getString().getLine();
-            System.out.println("[line : "+ line + "] :" + " Cannot perform addition operation with Number and String");
+            System.out.println("[line : "+ line + "] :" + " Cannot perform power operation with String and Number");
             errors++;
         } else if (value1 instanceof  ANumberValueValue && value2 instanceof AStringValueValue) {
             line = ((AStringValueValue) value2).getString().getLine();
-            System.out.println("[line : "+ line + "] :" + " Cannot perform addition operation with Number and String");
+            System.out.println("[line : "+ line + "] :" + " Cannot perform power operation with Number and String");
             errors++;
         }
     }
 
     /** Check if there's an error in divisions */
     @Override
-    public void inADivExpression(ADivExpression node) {
+    public void outADivExpression(ADivExpression node) {
         int line,position;
-        PValue value1 = null;
-        PValue value2 = null;
+        Node value1 = null;
+        Node value2 = null;
+        AFunctionCallExpression functionCall = null;
 
         if(node.getLpar() instanceof AIdentifierExpression){
             if (symtable.get(node.getLpar().toString().trim()) instanceof AAssignStatement){
@@ -384,7 +444,10 @@ public class Visitor extends DepthFirstAdapter
                 AAssignStatement nodeEq = (AAssignStatement) symtable.get(node.getLpar().toString().trim());
                 value1 = (PValue) getOut(nodeEq);
             }
-        }else{
+        } else if(node.getLpar() instanceof AFunctionCallExpression){
+            functionCall = (AFunctionCallExpression) node.getLpar();
+            value1 = (PValue) getOut(functionCall.getFunctionCall());
+        } else {
             value1 = ((AValueExpression) node.getLpar()).getValue();
         }
 
@@ -394,7 +457,10 @@ public class Visitor extends DepthFirstAdapter
                 AAssignStatement nodeEq = (AAssignStatement) symtable.get(node.getRpar().toString().trim());
                 value2 = (PValue) getOut(nodeEq);
             }
-        }else{
+        } else if(node.getRpar() instanceof AFunctionCallExpression){
+            functionCall = (AFunctionCallExpression) node.getLpar();
+            value2 = ((AFunctionCallExpression) node.getLpar()).getFunctionCall();
+        } else {
             value2 = ((AValueExpression) node.getRpar()).getValue();
         }
 
@@ -402,30 +468,31 @@ public class Visitor extends DepthFirstAdapter
         if(value1 instanceof ANoneValueValue) {
             line = ((ANoneValueValue) value1).getNone().getLine();
             position = ((ANoneValueValue) value1).getNone().getPos();
-            System.out.println("[line : " + line + ", position : " + position + "] :" + " Cannot perform addition operation with None");
+            System.out.println("[line : " + line + ", position : " + position + "] :" + " Cannot perform div operation with None");
             errors++;
         } else if( value2 instanceof ANoneValueValue) {
             line = ((ANoneValueValue) value2).getNone().getLine();
             position = ((ANoneValueValue) value2).getNone().getPos();
-            System.out.println("[line : " + line + ", position : " + position + "] :" + " Cannot perform addition operation with None");
+            System.out.println("[line : " + line + ", position : " + position + "] :" + " Cannot perform div operation with None");
             errors++;
-        } else if (value1 instanceof AStringValueValue  && value2 instanceof ANumberValueValue) {
+        } else if (value1 instanceof AStringValueValue && value2 instanceof ANumberValueValue) {
             line = ((AStringValueValue) value1).getString().getLine();
-            System.out.println("[line : "+ line + "] :" + " Cannot perform addition operation with Number and String");
+            System.out.println("[line : "+ line + "] :" + " Cannot perform div operation with String and Number");
             errors++;
         } else if (value1 instanceof  ANumberValueValue && value2 instanceof AStringValueValue) {
             line = ((AStringValueValue) value2).getString().getLine();
-            System.out.println("[line : "+ line + "] :" + " Cannot perform addition operation with Number and String");
+            System.out.println("[line : "+ line + "] :" + " Cannot perform div operation with Number and String");
             errors++;
         }
     }
 
     /** Check if there's an error in modulo operations */
     @Override
-    public void inAModExpression(AModExpression node) {
+    public void outAModExpression(AModExpression node) {
         int line,position;
-        PValue value1 = null;
-        PValue value2 = null;
+        Node value1 = null;
+        Node value2 = null;
+        AFunctionCallExpression functionCall = null;
 
         if(node.getLpar() instanceof AIdentifierExpression){
             if (symtable.get(node.getLpar().toString().trim()) instanceof AAssignStatement){
@@ -433,7 +500,10 @@ public class Visitor extends DepthFirstAdapter
                 AAssignStatement nodeEq = (AAssignStatement) symtable.get(node.getLpar().toString().trim());
                 value1 = (PValue) getOut(nodeEq);
             }
-        }else{
+        } else if(node.getLpar() instanceof AFunctionCallExpression){
+            functionCall = (AFunctionCallExpression) node.getLpar();
+            value1 = (PValue) getOut(functionCall.getFunctionCall());
+        } else {
             value1 = ((AValueExpression) node.getLpar()).getValue();
         }
 
@@ -443,7 +513,10 @@ public class Visitor extends DepthFirstAdapter
                 AAssignStatement nodeEq = (AAssignStatement) symtable.get(node.getRpar().toString().trim());
                 value2 = (PValue) getOut(nodeEq);
             }
-        }else{
+        } else if(node.getRpar() instanceof AFunctionCallExpression){
+            functionCall = (AFunctionCallExpression) node.getLpar();
+            value2 = ((AFunctionCallExpression) node.getLpar()).getFunctionCall();
+        } else {
             value2 = ((AValueExpression) node.getRpar()).getValue();
         }
 
@@ -451,20 +524,20 @@ public class Visitor extends DepthFirstAdapter
         if(value1 instanceof ANoneValueValue) {
             line = ((ANoneValueValue) value1).getNone().getLine();
             position = ((ANoneValueValue) value1).getNone().getPos();
-            System.out.println("[line : " + line + ", position : " + position + "] :" + " Cannot perform addition operation with None");
+            System.out.println("[line : " + line + ", position : " + position + "] :" + " Cannot perform mod operation with None");
             errors++;
         } else if( value2 instanceof ANoneValueValue) {
             line = ((ANoneValueValue) value2).getNone().getLine();
             position = ((ANoneValueValue) value2).getNone().getPos();
-            System.out.println("[line : " + line + ", position : " + position + "] :" + " Cannot perform addition operation with None");
+            System.out.println("[line : " + line + ", position : " + position + "] :" + " Cannot perform mod operation with None");
             errors++;
-        } else if (value1 instanceof AStringValueValue  && value2 instanceof ANumberValueValue) {
+        } else if (value1 instanceof AStringValueValue && value2 instanceof ANumberValueValue) {
             line = ((AStringValueValue) value1).getString().getLine();
-            System.out.println("[line : "+ line + "] :" + " Cannot perform addition operation with Number and String");
+            System.out.println("[line : "+ line + "] :" + " Cannot perform mod operation with String and Number");
             errors++;
         } else if (value1 instanceof  ANumberValueValue && value2 instanceof AStringValueValue) {
             line = ((AStringValueValue) value2).getString().getLine();
-            System.out.println("[line : "+ line + "] :" + " Cannot perform addition operation with Number and String");
+            System.out.println("[line : "+ line + "] :" + " Cannot perform mod operation with Number and String");
             errors++;
         }
     }
