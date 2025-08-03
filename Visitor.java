@@ -573,10 +573,29 @@ public class Visitor extends DepthFirstAdapter
             int line = ((TId) node.getInId()).getLine();
             int position = ((TId) node.getInId()).getPos();
             System.out.println("[line : "+ line + " position : " + position + "] :" + " variable " + varName2 + "is not defined.");
+            errors++;
         }else{
             if (!symtable.containsKey(varName1)) {
                 symtable.put(varName1, node);
             }
+        }
+    }
+
+    /** Check if max has 2 or more arguments */
+    @Override
+    public void inAMaxExpression(AMaxExpression node) {
+        if(node.getCommaValue().isEmpty()){
+            System.out.println("max function requires two or more arguments");
+            errors++;
+        }
+    }
+
+    /** Check if min has 2 or more arguments */
+    @Override
+    public void inAMinExpression(AMinExpression node) {
+        if(node.getCommaValue().isEmpty()){
+            System.out.println("min function requires two or more arguments");
+            errors++;
         }
     }
 

@@ -57,3 +57,7 @@
 #def add(x,y):
 #   return "hello world"
 #print add(2,1)+2
+
+# ------- Test11 ------- 
+#p = max(1)
+#q = min(2)
