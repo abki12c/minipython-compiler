@@ -1,5 +1,7 @@
 import minipython.analysis.*;
 import minipython.node.*;
+
+import java.beans.Expression;
 import java.util.*;
 
 public class Visitor extends DepthFirstAdapter
@@ -483,6 +485,10 @@ public class Visitor extends DepthFirstAdapter
             line = ((AStringValueValue) value2).getString().getLine();
             System.out.println("[line : "+ line + "] :" + " Cannot perform div operation with Number and String");
             errors++;
+        } else if(value1 instanceof ANumberValueValue && value2 instanceof ANumberValueValue && value2.toString().trim().equals("0")) {
+            line = ((ANumberValueValue) value2).getNumber().getLine();
+            System.out.println("[line : "+ line + "] :" + " Cannot perform div operation with 0");
+            errors++;
         }
     }
 
@@ -595,6 +601,15 @@ public class Visitor extends DepthFirstAdapter
     public void inAMinExpression(AMinExpression node) {
         if(node.getCommaValue().isEmpty()){
             System.out.println("min function requires two or more arguments");
+            errors++;
+        }
+    }
+
+    /** Check if parameter of len is a number */
+    @Override
+    public void inALenExpression(ALenExpression node) {
+        if(node.getExpression() instanceof AValueExpression) {
+            System.out.println("Can't get the length of a number");
             errors++;
         }
     }
