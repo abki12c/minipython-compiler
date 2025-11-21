@@ -55,7 +55,6 @@ Tokens
     false = 'false';
     else = 'else';
     none = 'None';
-    quote = '"';
     blank = (' ' | lf | cr);
     line_comment = '#' not_eol* eol;
     number = '-'? digit+ ('.' digit+)?;
