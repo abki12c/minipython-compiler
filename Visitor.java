@@ -223,8 +223,12 @@ public class Visitor extends DepthFirstAdapter
         } else if(node.getLpar() instanceof AFunctionCallExpression){
             functionCall = (AFunctionCallExpression) node.getLpar();
             value1 = (PValue) getOut(functionCall.getFunctionCall());
-        } else {
-            value1 = ((AValueExpression) node.getLpar()).getValue();
+        } else if(node.getRpar() instanceof AValueExpression) {
+            value1 = ((AValueExpression) node.getRpar()).getValue();
+        } else if(node.getRpar() instanceof AMultExpression) {
+            value1 = (PValue) getOut(node);
+        } else if(node.getRpar() instanceof APowerExpression) {
+            value1 = (PValue) getOut(node);
         }
 
         if(node.getRpar() instanceof AIdentifierExpression){
@@ -236,8 +240,16 @@ public class Visitor extends DepthFirstAdapter
         } else if(node.getRpar() instanceof AFunctionCallExpression){
             functionCall = (AFunctionCallExpression) node.getLpar();
             value2 = ((AFunctionCallExpression) node.getLpar()).getFunctionCall();
-        } else {
+        } else if(node.getRpar() instanceof AValueExpression) {
             value2 = ((AValueExpression) node.getRpar()).getValue();
+        } else if(node.getRpar() instanceof AMultExpression) {
+            value2 = (PValue) getOut(node);
+        } else if(node.getRpar() instanceof APowerExpression) {
+            value2 = (PValue) getOut(node);
+        } else if(node.getRpar() instanceof ADivExpression) {
+            outADivExpression((ADivExpression) node.getRpar());
+            ADivExpression x = (ADivExpression) node.getRpar();
+            System.out.println(x.getRpar().toString());
         }
 
 
@@ -281,8 +293,12 @@ public class Visitor extends DepthFirstAdapter
         } else if(node.getLpar() instanceof AFunctionCallExpression){
             functionCall = (AFunctionCallExpression) node.getLpar();
             value1 = (PValue) getOut(functionCall.getFunctionCall());
-        } else {
-            value1 = ((AValueExpression) node.getLpar()).getValue();
+        } else if(node.getRpar() instanceof AValueExpression) {
+            value1 = ((AValueExpression) node.getRpar()).getValue();
+        } else if(node.getRpar() instanceof AMultExpression) {
+            value1 = (PValue) getOut(node);
+        } else if(node.getRpar() instanceof APowerExpression) {
+            value1 = (PValue) getOut(node);
         }
 
         if(node.getRpar() instanceof AIdentifierExpression){
@@ -294,8 +310,12 @@ public class Visitor extends DepthFirstAdapter
         } else if(node.getRpar() instanceof AFunctionCallExpression){
             functionCall = (AFunctionCallExpression) node.getLpar();
             value2 = ((AFunctionCallExpression) node.getLpar()).getFunctionCall();
-        } else {
+        } else if(node.getRpar() instanceof AValueExpression) {
             value2 = ((AValueExpression) node.getRpar()).getValue();
+        } else if(node.getRpar() instanceof AMultExpression) {
+            value2 = (PValue) getOut(node);
+        } else if(node.getRpar() instanceof APowerExpression) {
+            value2 = (PValue) getOut(node);
         }
 
 
@@ -337,8 +357,12 @@ public class Visitor extends DepthFirstAdapter
         } else if(node.getLpar() instanceof AFunctionCallExpression){
             functionCall = (AFunctionCallExpression) node.getLpar();
             value1 = (PValue) getOut(functionCall.getFunctionCall());
-        } else {
-            value1 = ((AValueExpression) node.getLpar()).getValue();
+        } else if(node.getRpar() instanceof AValueExpression) {
+            value1 = ((AValueExpression) node.getRpar()).getValue();
+        } else if(node.getRpar() instanceof AMultExpression) {
+            value1 = (PValue) getOut(node);
+        } else if(node.getRpar() instanceof APowerExpression) {
+            value1 = (PValue) getOut(node);
         }
 
         if(node.getRpar() instanceof AIdentifierExpression){
@@ -350,8 +374,12 @@ public class Visitor extends DepthFirstAdapter
         } else if(node.getRpar() instanceof AFunctionCallExpression){
             functionCall = (AFunctionCallExpression) node.getLpar();
             value2 = ((AFunctionCallExpression) node.getLpar()).getFunctionCall();
-        } else {
+        } else if(node.getRpar() instanceof AValueExpression) {
             value2 = ((AValueExpression) node.getRpar()).getValue();
+        } else if(node.getRpar() instanceof AMultExpression) {
+            value2 = (PValue) getOut(node);
+        } else if(node.getRpar() instanceof APowerExpression) {
+            value2 = (PValue) getOut(node);
         }
 
 
@@ -393,8 +421,12 @@ public class Visitor extends DepthFirstAdapter
         } else if(node.getLpar() instanceof AFunctionCallExpression){
             functionCall = (AFunctionCallExpression) node.getLpar();
             value1 = (PValue) getOut(functionCall.getFunctionCall());
-        } else {
-            value1 = ((AValueExpression) node.getLpar()).getValue();
+        } else if(node.getRpar() instanceof AValueExpression) {
+            value1 = ((AValueExpression) node.getRpar()).getValue();
+        } else if(node.getRpar() instanceof AMultExpression) {
+            value1 = (PValue) getOut(node);
+        } else if(node.getRpar() instanceof APowerExpression) {
+            value1 = (PValue) getOut(node);
         }
 
         if(node.getRpar() instanceof AIdentifierExpression){
@@ -406,8 +438,12 @@ public class Visitor extends DepthFirstAdapter
         } else if(node.getRpar() instanceof AFunctionCallExpression){
             functionCall = (AFunctionCallExpression) node.getLpar();
             value2 = ((AFunctionCallExpression) node.getLpar()).getFunctionCall();
-        } else {
+        } else if(node.getRpar() instanceof AValueExpression) {
             value2 = ((AValueExpression) node.getRpar()).getValue();
+        } else if(node.getRpar() instanceof AMultExpression) {
+            value2 = (PValue) getOut(node);
+        } else if(node.getRpar() instanceof APowerExpression) {
+            value2 = (PValue) getOut(node);
         }
 
 
@@ -449,8 +485,12 @@ public class Visitor extends DepthFirstAdapter
         } else if(node.getLpar() instanceof AFunctionCallExpression){
             functionCall = (AFunctionCallExpression) node.getLpar();
             value1 = (PValue) getOut(functionCall.getFunctionCall());
-        } else {
-            value1 = ((AValueExpression) node.getLpar()).getValue();
+        } else if(node.getRpar() instanceof AValueExpression) {
+            value1 = ((AValueExpression) node.getRpar()).getValue();
+        } else if(node.getRpar() instanceof AMultExpression) {
+            value1 = (PValue) getOut(node);
+        } else if(node.getRpar() instanceof APowerExpression) {
+            value1 = (PValue) getOut(node);
         }
 
         if(node.getRpar() instanceof AIdentifierExpression){
@@ -462,8 +502,12 @@ public class Visitor extends DepthFirstAdapter
         } else if(node.getRpar() instanceof AFunctionCallExpression){
             functionCall = (AFunctionCallExpression) node.getLpar();
             value2 = ((AFunctionCallExpression) node.getLpar()).getFunctionCall();
-        } else {
+        } else if(node.getRpar() instanceof AValueExpression) {
             value2 = ((AValueExpression) node.getRpar()).getValue();
+        } else if(node.getRpar() instanceof AMultExpression) {
+            value2 = (PValue) getOut(node);
+        } else if(node.getRpar() instanceof APowerExpression) {
+            value2 = (PValue) getOut(node);
         }
 
 
@@ -509,8 +553,12 @@ public class Visitor extends DepthFirstAdapter
         } else if(node.getLpar() instanceof AFunctionCallExpression){
             functionCall = (AFunctionCallExpression) node.getLpar();
             value1 = (PValue) getOut(functionCall.getFunctionCall());
-        } else {
-            value1 = ((AValueExpression) node.getLpar()).getValue();
+        } else if(node.getRpar() instanceof AValueExpression) {
+            value1 = ((AValueExpression) node.getRpar()).getValue();
+        } else if(node.getRpar() instanceof AMultExpression) {
+            value1 = (PValue) getOut(node);
+        } else if(node.getRpar() instanceof APowerExpression) {
+            value1 = (PValue) getOut(node);
         }
 
         if(node.getRpar() instanceof AIdentifierExpression){
@@ -522,8 +570,12 @@ public class Visitor extends DepthFirstAdapter
         } else if(node.getRpar() instanceof AFunctionCallExpression){
             functionCall = (AFunctionCallExpression) node.getLpar();
             value2 = ((AFunctionCallExpression) node.getLpar()).getFunctionCall();
-        } else {
+        } else if(node.getRpar() instanceof AValueExpression) {
             value2 = ((AValueExpression) node.getRpar()).getValue();
+        } else if(node.getRpar() instanceof AMultExpression) {
+            value2 = (PValue) getOut(node);
+        } else if(node.getRpar() instanceof APowerExpression) {
+            value2 = (PValue) getOut(node);
         }
 
 
@@ -548,6 +600,20 @@ public class Visitor extends DepthFirstAdapter
         }
     }
 
+    /** Check if a variable is used but not defined in an ascii expression */
+    @Override
+    public void inAAsciiExpression(AAsciiExpression node) {
+        String varName = node.getId().toString().trim();
+        int line = ((TId)node.getId()).getLine();
+        int position = ((TId)node.getId()).getPos();
+
+        if(!symtable.containsKey(varName)){
+            System.out.println("[line : " + line + ", position : " + position + "] :" + " Variable " + varName + " is not defined");
+            errors++;
+        }
+    }
+
+    
     @Override
     public void outANoneValueValue(ANoneValueValue node) {
         setOut(node,node);
